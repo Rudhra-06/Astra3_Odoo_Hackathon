@@ -2,37 +2,210 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap");
 
-body {
-    @apply font-body bg-gray-100 text-ink-900;
+/* ── BASE ─────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+  body {
+    @apply font-body bg-[#F8FAFC] text-[#0F172A];
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  h1, h2, h3, h4, h5, h6 { @apply font-semibold tracking-tight text-[#0F172A]; }
 }
 
-/* Signature element: perforated "asset tag" edge, used on cards that represent
-   a physical asset (registration card, allocation card). Ties the UI back to
-   the real-world punch tag you'd tie to equipment. */
-.tag-card {
-    position: relative;
-    border-radius: 10px;
+/* ── COMPONENT LAYER ──────────────────────────────────────────────── */
+@layer components {
+
+  /* ── BUTTONS ── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded-lg
+           transition-all duration-150 ease-out select-none whitespace-nowrap
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1;
+    font-size: 0.8125rem;
+  }
+  .btn-sm  { @apply px-3 py-1.5 text-xs rounded-md; }
+  .btn-md  { @apply px-4 py-2; }
+  .btn-lg  { @apply px-5 py-2.5 text-base; }
+
+  .btn-primary {
+    @apply btn btn-md bg-[#2563EB] text-white
+           hover:bg-[#1D4ED8] active:scale-[0.98]
+           focus-visible:ring-[#2563EB];
+    box-shadow: 0 1px 3px rgba(37,99,235,0.25), 0 1px 2px rgba(37,99,235,0.15);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(37,99,235,0.30);
+  }
+
+  .btn-secondary {
+    @apply btn btn-md bg-white text-[#0F172A] border border-[#E2E8F0]
+           hover:bg-[#F8FAFC] hover:border-[#CBD5E1] active:scale-[0.98]
+           focus-visible:ring-[#2563EB];
+    box-shadow: 0 1px 2px rgba(15,23,42,0.05);
+  }
+
+  .btn-ghost {
+    @apply btn btn-md bg-transparent text-[#475569]
+           hover:bg-[#F1F5F9] hover:text-[#0F172A] active:scale-[0.98]
+           focus-visible:ring-[#2563EB];
+  }
+
+  .btn-danger {
+    @apply btn btn-md bg-[#DC2626] text-white
+           hover:bg-[#B91C1C] active:scale-[0.98]
+           focus-visible:ring-[#DC2626];
+  }
+
+  /* ── INPUTS ── */
+  .input {
+    @apply w-full bg-white border border-[#E2E8F0] rounded-lg px-3 py-2
+           text-sm text-[#0F172A] placeholder-[#94A3B8]
+           transition-all duration-150
+           focus:outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/15
+           disabled:bg-[#F8FAFC] disabled:text-[#94A3B8] disabled:cursor-not-allowed;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+  }
+  .input:hover:not(:focus):not(:disabled) { @apply border-[#CBD5E1]; }
+
+  select.input { @apply pr-8 appearance-none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748B' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+
+  /* ── CARDS ── */
+  .card {
+    @apply bg-white rounded-xl border border-[#E2E8F0];
+    box-shadow: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+  }
+  .card-hover {
+    @apply card transition-all duration-200
+           hover:border-[#CBD5E1] hover:-translate-y-px;
+    &:hover { box-shadow: 0 4px 12px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.06); }
+  }
+  .card-glass {
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    @apply rounded-xl border border-white/60;
+    box-shadow: 0 4px 24px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+
+  /* ── TABLE ── */
+  .ds-table { @apply w-full text-sm; }
+  .ds-table thead tr { @apply border-b border-[#E2E8F0]; }
+  .ds-table thead th { @apply px-4 py-3 text-left text-xs font-semibold text-[#64748B] uppercase tracking-wider bg-[#F8FAFC]; }
+  .ds-table tbody tr { @apply border-b border-[#F1F5F9] transition-colors duration-100 hover:bg-[#F8FAFC]; }
+  .ds-table tbody tr:last-child { @apply border-b-0; }
+  .ds-table tbody td { @apply px-4 py-3 text-[#0F172A]; }
+
+  /* ── BADGES ── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-green  { @apply badge bg-[#F0FDF4] text-[#16A34A]; }
+  .badge-blue   { @apply badge bg-[#EFF6FF] text-[#2563EB]; }
+  .badge-amber  { @apply badge bg-[#FFFBEB] text-[#D97706]; }
+  .badge-red    { @apply badge bg-[#FEF2F2] text-[#DC2626]; }
+  .badge-gray   { @apply badge bg-[#F1F5F9] text-[#64748B]; }
+  .badge-violet { @apply badge bg-[#F5F3FF] text-[#7C3AED]; }
+
+  /* ── ALERTS ── */
+  .alert { @apply flex items-start gap-3 px-4 py-3 rounded-lg border text-sm; }
+  .alert-info    { @apply alert bg-[#EFF6FF] border-[#BFDBFE] text-[#1D4ED8]; }
+  .alert-success { @apply alert bg-[#F0FDF4] border-[#BBF7D0] text-[#15803D]; }
+  .alert-warning { @apply alert bg-[#FFFBEB] border-[#FDE68A] text-[#B45309]; }
+  .alert-error   { @apply alert bg-[#FEF2F2] border-[#FECACA] text-[#B91C1C]; }
+
+  /* ── FORM FIELD ── */
+  .field { @apply flex flex-col gap-1; }
+  .field-label { @apply text-xs font-semibold text-[#475569] uppercase tracking-wide; }
+  .field-hint  { @apply text-xs text-[#94A3B8]; }
+
+  /* ── SKELETON ── */
+  .skeleton { @apply bg-[#E2E8F0] rounded-lg animate-pulse; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { @apply flex flex-col items-center justify-center py-16 text-center gap-3; }
+  .empty-state-icon { @apply w-12 h-12 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#94A3B8] text-xl; }
+  .empty-state-title { @apply text-sm font-semibold text-[#475569]; }
+  .empty-state-desc  { @apply text-xs text-[#94A3B8] max-w-xs; }
+
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center px-4;
+    background: rgba(15,23,42,0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: fade-in 150ms ease-out both;
+  }
+  .modal-panel {
+    @apply bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto;
+    box-shadow: 0 20px 60px rgba(15,23,42,0.20), 0 8px 20px rgba(15,23,42,0.10);
+    animation: scale-in 150ms ease-out both;
+  }
+
+  /* ── SIDEBAR NAV ITEM ── */
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg mx-2 text-sm font-medium
+           text-[#94A3B8] transition-all duration-150 cursor-pointer;
+  }
+  .nav-item:hover { @apply bg-white/8 text-white; }
+  .nav-item-active { @apply nav-item bg-white/12 text-white; }
+
+  /* ── KPI CARD ── */
+  .kpi-card {
+    @apply card-hover p-5 flex flex-col gap-3 cursor-pointer;
+  }
+  .kpi-value { @apply text-3xl font-bold tracking-tight text-[#0F172A]; font-family: 'Inter', sans-serif; }
+  .kpi-label { @apply text-xs font-semibold text-[#64748B] uppercase tracking-wider; }
+
+  /* ── ASSET CODE ── */
+  .asset-code {
+    font-family: 'IBM Plex Mono', monospace;
+    @apply text-xs font-medium tracking-wide;
+  }
+
+  /* ── DIVIDER ── */
+  .divider { @apply border-t border-[#E2E8F0]; }
+
+  /* ── PAGE HEADER ── */
+  .page-title { @apply text-xl font-bold text-[#0F172A] tracking-tight; }
+  .page-subtitle { @apply text-sm text-[#64748B]; }
 }
 
-.tag-card::before {
-    content: "";
-    position: absolute;
-    left: -6px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 12px;
-    height: 12px;
-    background: #f3f4f6;
-    border: 2px solid #d1d5db;
-    border-radius: 50%;
+/* ── KEYFRAMES ────────────────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }
 
-.asset-code {
-    @apply font-mono tracking-wide;
-}
+.animate-fade-in       { animation: fade-in  150ms ease-out both; }
+.animate-fade-up       { animation: fade-up  200ms ease-out both; }
+.animate-scale-in      { animation: scale-in 150ms ease-out both; }
+.animate-skeleton      { animation: skeleton-pulse 1.6s ease-in-out infinite; }
 
-.input {
-    @apply w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent;
-}
+/* ── SCROLLBAR ────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-[#CBD5E1] rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-[#94A3B8]; }
+
+/* ── FONT ALIASES ─────────────────────────────────────────────────── */
+.font-body    { font-family: 'Inter', sans-serif; }
+.font-display { font-family: 'Inter', sans-serif; }
+.font-mono    { font-family: 'IBM Plex Mono', monospace; }

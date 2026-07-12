@@ -3,12 +3,15 @@ import Navbar from "./Navbar";
 
 export default function Layout({ title, notificationCount, children }) {
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div style={{ display: "flex", minHeight: "100vh", background: "#F1F5F9" }}>
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <Navbar title={title} notificationCount={notificationCount} />
-        <main className="flex-1 p-6">{children}</main>
+        <main style={{ flex: 1, padding: "28px 28px", animation: "fadeUp 0.2s ease-out both" }}>
+          {children}
+        </main>
       </div>
+      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
     </div>
   );
 }
