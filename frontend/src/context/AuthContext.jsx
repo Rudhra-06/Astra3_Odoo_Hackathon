@@ -15,23 +15,26 @@ export function AuthProvider({ children }) {
     }, []);
 
     async function login(email, password) {
-        const data = await api.login(email, password);
-        // Expected shape from backend: { token, user: { name, email, role, department } }
-        localStorage.setItem("assetflow_token", data.token);
-        localStorage.setItem("assetflow_user", JSON.stringify(data.user));
-        setUser(data.user);
-        return data.user;
+        const response = await api.login(email, password);
+        const session = response.data || response;
+        if (!session.token || !session.user) throw new Error("Login response is incomplete. Please try again.");
+        localStorage.setItem("assetflow_token", session.token);
+        localStorage.setItem("assetflow_user", JSON.stringify(session.user));
+        setUser(session.user);
+        return session.user;
     }
 
     async function signup(name, email, password) {
         // Signup always creates a plain Employee account - no role field sent,
         // no role picker in the UI. Promotion only happens later, by an Admin,
         // in Organization Setup > Employee Directory.
-        const data = await api.signup(name, email, password);
-        localStorage.setItem("assetflow_token", data.token);
-        localStorage.setItem("assetflow_user", JSON.stringify(data.user));
-        setUser(data.user);
-        return data.user;
+        const response = await api.signup(name, email, password);
+        const session = response.data || response;
+        if (!session.token || !session.user) throw new Error("Account created, but sign-in could not be completed. Please log in.");
+        localStorage.setItem("assetflow_token", session.token);
+        localStorage.setItem("assetflow_user", JSON.stringify(session.user));
+        setUser(session.user);
+        return session.user;
     }
 
     function logout() {

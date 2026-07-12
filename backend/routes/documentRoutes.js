@@ -1,0 +1,11 @@
+const router = require('express').Router();
+const auth = require('../middleware/authMiddleware');
+const authorize = require('../middleware/authorize');
+const ctrl = require('../controllers/documentController');
+const { ROLES } = require('../constants');
+const managers = [ROLES.ADMIN, ROLES.ASSET_MANAGER];
+router.get('/assets/:assetId/documents', auth, ctrl.list);
+router.post('/assets/:assetId/documents', auth, authorize(...managers), ctrl.upload);
+router.patch('/documents/:id', auth, authorize(...managers), ctrl.replace);
+router.delete('/documents/:id', auth, authorize(...managers), ctrl.remove);
+module.exports = router;

@@ -14,6 +14,8 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const orgRoutes = require('./routes/orgRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const documentRoutes = require('./routes/documentRoutes');
+const intelligenceRoutes = require('./routes/intelligenceRoutes');
 
 const errorHandler = require('./middleware/errorHandler');
 const requestId = require('./middleware/requestId');
@@ -37,6 +39,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/org', orgRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api', documentRoutes);
+app.use('/api/intelligence', intelligenceRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 

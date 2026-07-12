@@ -47,6 +47,11 @@ export const api = {
         request(`/assets/${id}/passport`),
     getAssetTimeline: (id) =>
         request(`/assets/${id}/timeline`),
+    getAssetInsights: (id) => request(`/intelligence/assets/${id}/insights`),
+    getDocuments: (id) => request(`/assets/${id}/documents`),
+    uploadDocument: (id, payload) => request(`/assets/${id}/documents`, { method: "POST", body: payload }),
+    replaceDocument: (id, payload) => request(`/documents/${id}`, { method: "PATCH", body: payload }),
+    deleteDocument: (id) => request(`/documents/${id}`, { method: "DELETE" }),
 
     // --- QR ---
     lookupByQR: (qrCode) =>
@@ -62,7 +67,13 @@ export const api = {
         request("/bookings", { method: "POST", body: payload }),
 
     // --- Dashboard KPIs ---
-    getDashboardStats: () => request("/dashboard/stats"),
+    getDashboardStats: () => request("/dashboard"),
+    getIntelligenceOverview: () => request("/intelligence/overview"),
+    naturalSearch: (query) => request("/intelligence/search", { method: "POST", body: { query } }),
+    askAssistant: (question) => request("/intelligence/assistant", { method: "POST", body: { question } }),
+    executiveReport: (type) => request("/intelligence/reports/executive", { method: "POST", body: { type } }),
+    getUnreadNotifications: () => request("/notifications/unread-count"),
+    extractInvoice: (text) => request("/intelligence/ocr/invoice", { method: "POST", body: { text } }),
 };
 
 export default api;

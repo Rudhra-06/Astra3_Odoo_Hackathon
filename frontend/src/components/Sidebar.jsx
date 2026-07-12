@@ -2,6 +2,8 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const NAV_ITEMS = [
+    { to: "/scanner", label: "QR Scanner", icon: "QR", roles: ["Admin", "AssetManager", "DepartmentHead", "Employee"] },
+    { to: "/assistant", label: "AI Assistant", icon: "AI", roles: ["Admin", "AssetManager", "DepartmentHead", "Employee"] },
     { to: "/dashboard", label: "Dashboard", icon: "◧", roles: ["Admin", "AssetManager", "DepartmentHead", "Employee"] },
     { to: "/org-setup", label: "Organization Setup", icon: "▤", roles: ["Admin"] },
     { to: "/assets", label: "Assets", icon: "▣", roles: ["Admin", "AssetManager", "DepartmentHead", "Employee"] },

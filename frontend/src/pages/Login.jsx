@@ -79,7 +79,8 @@ export default function Login() {
                                 <input
                                     required
                                     type="email"
-                                    value={form.email}
+                                        value={form.email}
+                                        autoComplete="email"
                                     onChange={(e) => update("email", e.target.value)}
                                     className="input"
                                     placeholder="you@company.com"
@@ -88,8 +89,9 @@ export default function Login() {
                             <Field label="Password">
                                 <input
                                     required
-                                    type="password"
-                                    value={form.password}
+                                        type="password"
+                                        value={form.password}
+                                        autoComplete={mode === "login" ? "current-password" : "new-password"}
                                     onChange={(e) => update("password", e.target.value)}
                                     className="input"
                                     placeholder="••••••••"
@@ -169,6 +171,7 @@ function ForgotPassword({ onBack }) {
                     required
                     type="email"
                     value={email}
+                    autoComplete="email"
                     onChange={(e) => setEmail(e.target.value)}
                     className="input"
                     placeholder="you@company.com"

@@ -1,0 +1,11 @@
+const router = require('express').Router();
+const auth = require('../middleware/authMiddleware');
+const ctrl = require('../controllers/intelligenceController');
+router.get('/overview', auth, ctrl.getOverview);
+router.get('/assets/:id/insights', auth, ctrl.getAssetInsights);
+router.get('/search', auth, ctrl.naturalSearch);
+router.post('/search', auth, ctrl.naturalSearch);
+router.post('/assistant', auth, ctrl.ask);
+router.post('/reports/executive', auth, ctrl.report);
+router.post('/ocr/invoice', auth, ctrl.invoiceOcr);
+module.exports = router;

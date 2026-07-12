@@ -32,7 +32,18 @@ export default function Dashboard() {
     useEffect(() => {
         api
             .getDashboardStats()
-            .then(setStats)
+            .then((res) => {
+                const summary = res.data?.summary;
+                if (!summary) throw new Error("Dashboard summary is unavailable");
+                setStats({
+                    assetsAvailable: summary.available,
+                    assetsAllocated: summary.allocated,
+                    maintenanceToday: summary.pendingMaintenance,
+                    activeBookings: summary.activeBookings,
+                    pendingTransfers: summary.pendingTransfers,
+                    upcomingReturns: summary.overdueAllocations,
+                });
+            })
             .catch(() => setStats(MOCK_STATS)); // backend not ready yet - keep mock data
     }, []);
 
@@ -47,7 +58,7 @@ export default function Dashboard() {
                 <KpiCard label="Maintenance Today" value={stats.maintenanceToday} accent="amber" onClick={() => navigate("/maintenance")} />
                 <KpiCard label="Active Bookings" value={stats.activeBookings} accent="teal" onClick={() => navigate("/booking")} />
                 <KpiCard label="Pending Transfers" value={stats.pendingTransfers} accent="amber" onClick={() => navigate("/allocation")} />
-                <KpiCard label="Upcoming Returns" value={stats.upcomingReturns} accent="blue" />
+                <KpiCard label="Overdue Returns" value={stats.upcomingReturns} accent="blue" />
             </div>
 
             <div className="flex flex-wrap gap-3 mb-6">

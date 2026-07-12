@@ -7,6 +7,8 @@ import AssetRegistration from "./pages/AssetRegistration";
 import AssetDetail from "./pages/AssetDetail";
 import AssetAllocation from "./pages/AssetAllocation";
 import ResourceBooking from "./pages/ResourceBooking";
+import AssetScanner from "./pages/AssetScanner";
+import AssetAssistant from "./pages/AssetAssistant";
 
 function PrivateRoute({ children }) {
     const { user, loading } = useAuth();
@@ -17,7 +19,7 @@ function PrivateRoute({ children }) {
 export default function App() {
     return (
         <AuthProvider>
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <Routes>
                     <Route path="/login" element={<Login />} />
 
@@ -27,6 +29,8 @@ export default function App() {
                     <Route path="/assets/:id" element={<PrivateRoute><AssetDetail /></PrivateRoute>} />
                     <Route path="/allocation" element={<PrivateRoute><AssetAllocation /></PrivateRoute>} />
                     <Route path="/booking" element={<PrivateRoute><ResourceBooking /></PrivateRoute>} />
+                    <Route path="/scanner" element={<PrivateRoute><AssetScanner /></PrivateRoute>} />
+                    <Route path="/assistant" element={<PrivateRoute><AssetAssistant /></PrivateRoute>} />
 
                     {/* <Route path="/org-setup" element={<PrivateRoute><OrgSetup /></PrivateRoute>} /> */}
                     {/* <Route path="/maintenance" element={<PrivateRoute><Maintenance /></PrivateRoute>} /> */}

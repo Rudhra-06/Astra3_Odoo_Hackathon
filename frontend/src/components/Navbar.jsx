@@ -1,9 +1,20 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import api from "../utils/api";
 
 export default function Navbar({ title, notificationCount = 0 }) {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [unread, setUnread] = useState(notificationCount);
+
+    useEffect(() => {
+        let mounted = true;
+        const poll = () => api.getUnreadNotifications().then((res) => mounted && setUnread(res.data.count)).catch(() => {});
+        poll();
+        const interval = setInterval(poll, 30000);
+        return () => { mounted = false; clearInterval(interval); };
+    }, []);
 
     return (
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-10">
@@ -31,9 +42,9 @@ export default function Navbar({ title, notificationCount = 0 }) {
                     aria-label="Notifications"
                 >
                     🔔
-                    {notificationCount > 0 && (
+                    {unread > 0 && (
                         <span className="absolute -top-0.5 -right-0.5 bg-status-lost text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                            {notificationCount}
+                            {unread}
                         </span>
                     )}
                 </button>

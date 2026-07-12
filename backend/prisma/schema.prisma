@@ -184,6 +184,7 @@ model Asset {
   maintenances    MaintenanceRecord[]
   bookings        Booking[]
   auditItems      AuditItem[]
+  documents       AssetDocument[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   deletedAt       DateTime?
@@ -196,6 +197,23 @@ model Asset {
   @@index([deletedAt])
   @@index([warrantyExpiry])
   @@index([vendorId])
+}
+
+model AssetDocument {
+  id          Int      @id @default(autoincrement())
+  assetId     Int
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  name        String
+  type        String
+  mimeType    String
+  size        Int      @default(0)
+  dataUrl     String?
+  externalUrl String?
+  createdById Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([assetId, type])
 }
 
 // ─── Allocation ───────────────────────────────────────────────────────────────
