@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  ASSET_MANAGER
+  DEPARTMENT_HEAD
+  EMPLOYEE
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ALLOCATED
+  RESERVED
+  UNDER_MAINTENANCE
+  LOST
+  RETIRED
+  DISPOSED
+}
+
+enum TransferStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model Department {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  parentId  Int?
+  parent    Department?  @relation("DeptHierarchy", fields: [parentId], references: [id])
+  children  Department[] @relation("DeptHierarchy")
+  headId    Int?
+  head      User?        @relation("DeptHead", fields: [headId], references: [id])
+  status    String    @default("ACTIVE")
+  employees User[]    @relation("DeptEmployees")
+  createdAt DateTime  @default(now())
+}
+
+model User {
+  id           Int          @id @default(autoincrement())
+  name         String
+  email        String       @unique
+  password     String
+  role         Role         @default(EMPLOYEE)
+  status       String       @default("ACTIVE")
+  departmentId Int?
+  department   Department?  @relation("DeptEmployees", fields: [departmentId], references: [id])
+  headOf       Department[] @relation("DeptHead")
+  allocations  Allocation[] @relation("AllocatedTo")
+  createdAt    DateTime     @default(now())
+}
+
+model AssetCategory {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  fields Json?
+  assets Asset[]
+}
+
+model Asset {
+  id              Int              @id @default(autoincrement())
+  assetTag        String           @unique
+  name            String
+  categoryId      Int
+  category        AssetCategory    @relation(fields: [categoryId], references: [id])
+  serialNumber    String?
+  acquisitionDate DateTime?
+  acquisitionCost Float?
+  condition       String?
+  location        String?
+  isBookable      Boolean          @default(false)
+  status          AssetStatus      @default(AVAILABLE)
+  photoUrl        String?
+  allocations     Allocation[]
+  transfers       TransferRequest[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Allocation {
+  id                 Int       @id @default(autoincrement())
+  assetId            Int
+  asset              Asset     @relation(fields: [assetId], references: [id])
+  allocatedToUserId  Int?
+  allocatedToUser    User?     @relation("AllocatedTo", fields: [allocatedToUserId], references: [id])
+  allocatedToDeptId  Int?
+  expectedReturnDate DateTime?
+  actualReturnDate   DateTime?
+  conditionNotes     String?
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+}
+
+model TransferRequest {
+  id          Int            @id @default(autoincrement())
+  assetId     Int
+  asset       Asset          @relation(fields: [assetId], references: [id])
+  fromUserId  Int?
+  toUserId    Int?
+  status      TransferStatus @default(REQUESTED)
+  requestedAt DateTime       @default(now())
+  resolvedAt  DateTime?
+}
