@@ -1,81 +1,83 @@
-const AssetModel = require('../models/assetModel');
-const generateAssetTag = require('../utils/generateAssetTag');
-const { canTransition } = require('../utils/assetStateMachine');
+const AssetService = require('../services/assetService');
+const { success, created, paginated } = require('../utils/response');
 
-// POST /api/assets
-async function registerAsset(req, res) {
+async function registerAsset(req, res, next) {
   try {
-    const { name, categoryId, serialNumber, acquisitionDate, acquisitionCost,
-            condition, location, isBookable, photoUrl } = req.body;
-
-    if (!name || !categoryId) {
-      return res.status(400).json({ error: 'name and categoryId are required' });
-    }
-
-    const assetTag = await generateAssetTag();
-
-    const asset = await AssetModel.create({
-      assetTag,
-      name,
-      categoryId: Number(categoryId),
-      serialNumber,
-      acquisitionDate: acquisitionDate ? new Date(acquisitionDate) : null,
-      acquisitionCost: acquisitionCost ? Number(acquisitionCost) : null,
-      condition,
-      location,
-      isBookable: Boolean(isBookable),
-      photoUrl,
-    });
-
-    res.status(201).json(asset);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to register asset' });
-  }
+    const asset = await AssetService.register(req.body, req);
+    created(res, { asset }, 'Asset registered successfully');
+  } catch (err) { next(err); }
 }
 
-// GET /api/assets?assetTag=&serialNumber=&status=&categoryId=&location=
-async function searchAssets(req, res) {
+async function searchAssets(req, res, next) {
   try {
-    const assets = await AssetModel.search(req.query);
-    res.json(assets);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Search failed' });
-  }
+    const { assets, pagination } = await AssetService.search(req.query);
+    paginated(res, assets, pagination);
+  } catch (err) { next(err); }
 }
 
-// GET /api/assets/:id
-async function getAssetById(req, res) {
+async function getAssetById(req, res, next) {
   try {
-    const asset = await AssetModel.findById(req.params.id);
-    if (!asset) return res.status(404).json({ error: 'Asset not found' });
-    res.json(asset);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch asset' });
-  }
+    const asset = await AssetService.getById(req.params.id);
+    success(res, { asset });
+  } catch (err) { next(err); }
 }
 
-// PATCH /api/assets/:id/status
-async function updateAssetStatus(req, res) {
+async function getAssetPassport(req, res, next) {
   try {
-    const { status: newStatus } = req.body;
-    const asset = await AssetModel.findById(req.params.id);
-    if (!asset) return res.status(404).json({ error: 'Asset not found' });
-
-    if (!canTransition(asset.status, newStatus)) {
-      return res.status(400).json({
-        error: `Cannot transition asset from ${asset.status} to ${newStatus}`,
-      });
-    }
-
-    const updated = await AssetModel.updateStatus(req.params.id, newStatus);
-    res.json(updated);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Status update failed' });
-  }
+    const passport = await AssetService.getPassport(req.params.id);
+    success(res, { passport });
+  } catch (err) { next(err); }
 }
 
-module.exports = { registerAsset, searchAssets, getAssetById, updateAssetStatus };
+async function getAssetTimeline(req, res, next) {
+  try {
+    const events = await AssetService.getTimeline(req.params.id);
+    success(res, { events });
+  } catch (err) { next(err); }
+}
+
+async function lookupByQR(req, res, next) {
+  try {
+    const asset = await AssetService.lookupByQR(req.params.qrCode);
+    success(res, { asset });
+  } catch (err) { next(err); }
+}
+
+async function updateAsset(req, res, next) {
+  try {
+    const asset = await AssetService.update(req.params.id, req.body, req);
+    success(res, { asset }, 'Asset updated successfully');
+  } catch (err) { next(err); }
+}
+
+async function updateAssetStatus(req, res, next) {
+  try {
+    const asset = await AssetService.updateStatus(req.params.id, req.body.status, req);
+    success(res, { asset }, 'Asset status updated');
+  } catch (err) { next(err); }
+}
+
+async function regenerateQR(req, res, next) {
+  try {
+    const asset = await AssetService.regenerateQR(req.params.id, req);
+    success(res, { asset }, 'QR code regenerated');
+  } catch (err) { next(err); }
+}
+
+async function downloadQR(req, res, next) {
+  try {
+    const { buffer, assetTag } = await AssetService.downloadQR(req.params.id);
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', `attachment; filename="${assetTag}-qr.png"`);
+    res.send(buffer);
+  } catch (err) { next(err); }
+}
+
+async function getWarrantyAlerts(req, res, next) {
+  try {
+    const alerts = await AssetService.getWarrantyAlerts();
+    success(res, { alerts });
+  } catch (err) { next(err); }
+}
+
+module.exports = { registerAsset, searchAssets, getAssetById, getAssetPassport, getAssetTimeline, lookupByQR, updateAsset, updateAssetStatus, regenerateQR, downloadQR, getWarrantyAlerts };

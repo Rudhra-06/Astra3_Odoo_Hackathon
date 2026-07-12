@@ -1,126 +1,83 @@
-const prisma = require('../config/db');
-const AssetModel = require('../models/assetModel');
-const AllocationModel = require('../models/allocationModel');
+const AllocationService = require('../services/allocationService');
+const { success, created } = require('../utils/response');
 
-// POST /api/allocations
-async function allocateAsset(req, res) {
+async function allocateAsset(req, res, next) {
   try {
-    const { assetId, allocatedToUserId, allocatedToDeptId, expectedReturnDate } = req.body;
-
-    if (!assetId || (!allocatedToUserId && !allocatedToDeptId)) {
-      return res.status(400).json({ error: 'assetId and a target user/department are required' });
-    }
-
-    const existing = await AllocationModel.getActiveAllocation(assetId);
-    if (existing) {
-      return res.status(409).json({
-        error: 'Asset already allocated',
-        currentlyHeldBy: existing.allocatedToUser?.name || 'another department',
-        suggestion: 'transfer_request',
-      });
-    }
-
-    const allocation = await AllocationModel.create({
-      assetId: Number(assetId),
-      allocatedToUserId: allocatedToUserId ? Number(allocatedToUserId) : null,
-      allocatedToDeptId: allocatedToDeptId ? Number(allocatedToDeptId) : null,
-      expectedReturnDate: expectedReturnDate ? new Date(expectedReturnDate) : null,
-    });
-
-    await AssetModel.updateStatus(assetId, 'ALLOCATED');
-
-    res.status(201).json(allocation);
+    const allocation = await AllocationService.allocate(req.body, req);
+    created(res, { allocation }, 'Asset allocated successfully');
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Allocation failed' });
+    next(err);
   }
 }
 
-// POST /api/allocations/transfer-request
-async function requestTransfer(req, res) {
+async function returnAsset(req, res, next) {
   try {
-    const { assetId, toUserId } = req.body;
-    const asset = await AssetModel.findById(assetId);
-    if (!asset) return res.status(404).json({ error: 'Asset not found' });
-
-    const activeAllocation = await AllocationModel.getActiveAllocation(assetId);
-
-    const transfer = await prisma.transferRequest.create({
-      data: {
-        assetId: Number(assetId),
-        fromUserId: activeAllocation?.allocatedToUserId || null,
-        toUserId: Number(toUserId),
-        status: 'REQUESTED',
-      },
-    });
-
-    res.status(201).json(transfer);
+    const allocation = await AllocationService.returnAsset(
+      req.params.id,
+      req.body.conditionNotes,
+      req
+    );
+    success(res, { allocation }, 'Asset returned successfully');
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Transfer request failed' });
+    next(err);
   }
 }
 
-// PATCH /api/allocations/transfer/:id/approve
-async function approveTransfer(req, res) {
+async function requestTransfer(req, res, next) {
   try {
-    const transfer = await prisma.transferRequest.update({
-      where: { id: Number(req.params.id) },
-      data: { status: 'APPROVED', resolvedAt: new Date() },
-    });
-
-    // close old allocation
-    const oldAllocation = await AllocationModel.getActiveAllocation(transfer.assetId);
-    if (oldAllocation) {
-      await AllocationModel.markReturned(oldAllocation.id, 'Transferred');
-    }
-
-    // create new allocation
-    const newAllocation = await AllocationModel.create({
-      assetId: transfer.assetId,
-      allocatedToUserId: transfer.toUserId,
-    });
-
-    await prisma.transferRequest.update({
-      where: { id: transfer.id },
-      data: { status: 'COMPLETED' },
-    });
-
-    res.json({ transfer, newAllocation });
+    const transfer = await AllocationService.requestTransfer(req.body, req);
+    created(res, { transfer }, 'Transfer request submitted');
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Transfer approval failed' });
+    next(err);
   }
 }
 
-// POST /api/allocations/:id/return
-async function returnAsset(req, res) {
+async function approveTransfer(req, res, next) {
   try {
-    const { conditionNotes } = req.body;
-    const allocation = await AllocationModel.markReturned(req.params.id, conditionNotes);
-    await AssetModel.updateStatus(allocation.assetId, 'AVAILABLE');
-    res.json(allocation);
+    const result = await AllocationService.approveTransfer(req.params.id, req);
+    success(res, result, 'Transfer approved and completed');
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Return failed' });
+    next(err);
   }
 }
 
-// GET /api/allocations/overdue
-async function getOverdueAllocations(req, res) {
+async function rejectTransfer(req, res, next) {
   try {
-    const overdue = await AllocationModel.getOverdue();
-    res.json(overdue);
+    const transfer = await AllocationService.rejectTransfer(
+      req.params.id,
+      req.body.rejectionNote,
+      req
+    );
+    success(res, { transfer }, 'Transfer request rejected');
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch overdue allocations' });
+    next(err);
+  }
+}
+
+async function getOverdueAllocations(req, res, next) {
+  try {
+    const allocations = await AllocationService.getOverdue();
+    success(res, { allocations });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getAllocationHistory(req, res, next) {
+  try {
+    const history = await AllocationService.getHistory(req.params.assetId);
+    success(res, { history });
+  } catch (err) {
+    next(err);
   }
 }
 
 module.exports = {
   allocateAsset,
+  returnAsset,
   requestTransfer,
   approveTransfer,
-  returnAsset,
+  rejectTransfer,
   getOverdueAllocations,
+  getAllocationHistory,
 };

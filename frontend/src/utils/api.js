@@ -24,21 +24,39 @@ async function request(path, { method = "GET", body, token } = {}) {
 }
 
 export const api = {
-    // --- Auth (Namii's backend routes: /api/auth/*) ---
+    // --- Auth ---
     login: (email, password) =>
         request("/auth/login", { method: "POST", body: { email, password } }),
     signup: (name, email, password) =>
         request("/auth/signup", { method: "POST", body: { name, email, password } }),
 
-    // --- Assets (Rudhu's backend routes: /api/assets/*) ---
+    // --- Assets ---
     getAssets: (params = {}) =>
         request(`/assets?${new URLSearchParams(params)}`),
+    getAssetById: (id) =>
+        request(`/assets/${id}`),
     registerAsset: (payload) =>
         request("/assets", { method: "POST", body: payload }),
+    updateAsset: (id, payload) =>
+        request(`/assets/${id}`, { method: "PATCH", body: payload }),
     allocateAsset: (assetId, payload) =>
         request(`/assets/${assetId}/allocate`, { method: "POST", body: payload }),
 
-    // --- Bookings (Namii's backend routes: /api/bookings/*) ---
+    // --- Asset Passport & Timeline ---
+    getAssetPassport: (id) =>
+        request(`/assets/${id}/passport`),
+    getAssetTimeline: (id) =>
+        request(`/assets/${id}/timeline`),
+
+    // --- QR ---
+    lookupByQR: (qrCode) =>
+        request(`/assets/qr/lookup/${encodeURIComponent(qrCode)}`),
+    regenerateQR: (id) =>
+        request(`/assets/${id}/qr/regenerate`, { method: "POST" }),
+    getQRDownloadUrl: (id) =>
+        `${BASE_URL}/assets/${id}/qr/download`,
+
+    // --- Bookings ---
     getBookings: (resourceId) => request(`/bookings?resourceId=${resourceId}`),
     createBooking: (payload) =>
         request("/bookings", { method: "POST", body: payload }),

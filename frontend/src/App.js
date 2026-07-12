@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AssetRegistration from "./pages/AssetRegistration";
+import AssetDetail from "./pages/AssetDetail";
 import AssetAllocation from "./pages/AssetAllocation";
 import ResourceBooking from "./pages/ResourceBooking";
 
@@ -23,11 +24,10 @@ export default function App() {
                     <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
                     <Route path="/assets" element={<PrivateRoute><AssetRegistration /></PrivateRoute>} />
                     <Route path="/assets/new" element={<PrivateRoute><AssetRegistration /></PrivateRoute>} />
+                    <Route path="/assets/:id" element={<PrivateRoute><AssetDetail /></PrivateRoute>} />
                     <Route path="/allocation" element={<PrivateRoute><AssetAllocation /></PrivateRoute>} />
                     <Route path="/booking" element={<PrivateRoute><ResourceBooking /></PrivateRoute>} />
 
-                    {/* Namii's screens (Org Setup, Audit) and maintenance/reports/activity
-              plug in here the same way once built: */}
                     {/* <Route path="/org-setup" element={<PrivateRoute><OrgSetup /></PrivateRoute>} /> */}
                     {/* <Route path="/maintenance" element={<PrivateRoute><Maintenance /></PrivateRoute>} /> */}
                     {/* <Route path="/audit" element={<PrivateRoute><AssetAudit /></PrivateRoute>} /> */}

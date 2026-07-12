@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import StatusBadge from "../components/StatusBadge";
 import api from "../utils/api";
@@ -6,25 +7,30 @@ import api from "../utils/api";
 const CATEGORIES = ["Electronics", "Furniture", "Vehicles", "Equipment"];
 const LOCATIONS = ["HQ - Floor 1", "HQ - Floor 2", "Warehouse A", "Remote"];
 
-const MOCK_ASSETS = [
-    { tag: "AF-0114", name: "Dell Latitude 5420", category: "Electronics", status: "Allocated", department: "Engineering", location: "HQ - Floor 2" },
-    { tag: "AF-0209", name: "Toyota Innova", category: "Vehicles", status: "Reserved", department: "Admin", location: "Warehouse A" },
-    { tag: "AF-0031", name: "Ergo Chair", category: "Furniture", status: "Available", department: "-", location: "HQ - Floor 1" },
-    { tag: "AF-0087", name: "Projector EPX200", category: "Electronics", status: "Under Maintenance", department: "Sales", location: "HQ - Floor 1" },
-];
+const STATUS_DISPLAY = {
+    AVAILABLE: "Available", ALLOCATED: "Allocated", RESERVED: "Reserved",
+    UNDER_MAINTENANCE: "Under Maintenance", LOST: "Lost", RETIRED: "Retired", DISPOSED: "Disposed",
+};
 
 export default function AssetRegistration() {
-    const [assets, setAssets] = useState(MOCK_ASSETS);
+    const navigate = useNavigate();
+    const [assets, setAssets] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [filters, setFilters] = useState({ query: "", category: "", status: "" });
 
+    useEffect(() => {
+        api.getAssets({ limit: 100 })
+            .then((res) => setAssets(res.data || []))
+            .catch(() => setAssets([]))
+            .finally(() => setLoading(false));
+    }, []);
+
     const filtered = assets.filter((a) => {
-        const matchesQuery =
-            !filters.query ||
-            a.tag.toLowerCase().includes(filters.query.toLowerCase()) ||
-            a.name.toLowerCase().includes(filters.query.toLowerCase());
-        const matchesCategory = !filters.category || a.category === filters.category;
-        const matchesStatus = !filters.status || a.status === filters.status;
+        const q = filters.query.toLowerCase();
+        const matchesQuery = !q || a.assetTag?.toLowerCase().includes(q) || a.name?.toLowerCase().includes(q);
+        const matchesCategory = !filters.category || a.category?.name === filters.category;
+        const matchesStatus = !filters.status || STATUS_DISPLAY[a.status] === filters.status;
         return matchesQuery && matchesCategory && matchesStatus;
     });
 
@@ -49,9 +55,7 @@ export default function AssetRegistration() {
                         className="input max-w-[10rem]"
                     >
                         <option value="">All categories</option>
-                        {CATEGORIES.map((c) => (
-                            <option key={c}>{c}</option>
-                        ))}
+                        {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                     </select>
                     <select
                         value={filters.status}
@@ -59,9 +63,7 @@ export default function AssetRegistration() {
                         className="input max-w-[10rem]"
                     >
                         <option value="">All statuses</option>
-                        {["Available", "Allocated", "Reserved", "Under Maintenance", "Lost", "Retired", "Disposed"].map((s) => (
-                            <option key={s}>{s}</option>
-                        ))}
+                        {Object.values(STATUS_DISPLAY).map((s) => <option key={s}>{s}</option>)}
                     </select>
                 </div>
                 <button
@@ -79,25 +81,37 @@ export default function AssetRegistration() {
                             <th className="text-left px-4 py-2.5">Tag</th>
                             <th className="text-left px-4 py-2.5">Name</th>
                             <th className="text-left px-4 py-2.5">Category</th>
-                            <th className="text-left px-4 py-2.5">Department</th>
                             <th className="text-left px-4 py-2.5">Location</th>
                             <th className="text-left px-4 py-2.5">Status</th>
+                            <th className="text-left px-4 py-2.5">QR</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {filtered.map((a) => (
-                            <tr key={a.tag} className="hover:bg-gray-50">
-                                <td className="px-4 py-2.5 asset-code text-ink-900">{a.tag}</td>
-                                <td className="px-4 py-2.5">{a.name}</td>
-                                <td className="px-4 py-2.5 text-gray-500">{a.category}</td>
-                                <td className="px-4 py-2.5 text-gray-500">{a.department}</td>
-                                <td className="px-4 py-2.5 text-gray-500">{a.location}</td>
+                        {loading && (
+                            <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Loading assets…</td></tr>
+                        )}
+                        {!loading && filtered.map((a) => (
+                            <tr
+                                key={a.id}
+                                onClick={() => navigate(`/assets/${a.id}`)}
+                                className="hover:bg-gray-50 cursor-pointer"
+                            >
+                                <td className="px-4 py-2.5 asset-code text-ink-900">{a.assetTag}</td>
+                                <td className="px-4 py-2.5 font-medium">{a.name}</td>
+                                <td className="px-4 py-2.5 text-gray-500">{a.category?.name || "—"}</td>
+                                <td className="px-4 py-2.5 text-gray-500">{a.location || "—"}</td>
                                 <td className="px-4 py-2.5">
-                                    <StatusBadge status={a.status} />
+                                    <StatusBadge status={STATUS_DISPLAY[a.status] || a.status} />
+                                </td>
+                                <td className="px-4 py-2.5">
+                                    {a.qrCodeUrl
+                                        ? <span className="text-xs text-teal-600 font-medium">✓ Ready</span>
+                                        : <span className="text-xs text-gray-300">—</span>
+                                    }
                                 </td>
                             </tr>
                         ))}
-                        {filtered.length === 0 && (
+                        {!loading && filtered.length === 0 && (
                             <tr>
                                 <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
                                     No assets match those filters.
