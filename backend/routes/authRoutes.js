@@ -1,7 +1,8 @@
 const router = require('express').Router();
-const { signup, login } = require('../controllers/authController');
+const { signup, login, me } = require('../controllers/authController');
 const { signup: signupRules, login: loginRules } = require('../validators/authValidators');
 const validate = require('../middleware/validate');
+const auth = require('../middleware/authMiddleware');
 
 /**
  * @swagger
@@ -49,5 +50,6 @@ router.post('/signup', signupRules, validate, signup);
  *       401: { description: Invalid credentials }
  */
 router.post('/login', loginRules, validate, login);
+router.get('/me', auth, me);
 
 module.exports = router;

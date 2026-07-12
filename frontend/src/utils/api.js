@@ -4,11 +4,24 @@
 // needs to change once your endpoints exist.
 
 const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const PUBLIC_PATHS = ["/auth/login", "/auth/signup"];
+
+function getStoredToken() {
+    return localStorage.getItem("assetflow_token");
+}
+
+function clearStoredSession() {
+    localStorage.removeItem("assetflow_token");
+    localStorage.removeItem("assetflow_user");
+}
 
 async function request(path, { method = "GET", body, token } = {}) {
+    const normalizedPath = path.split("?")[0];
     const headers = { "Content-Type": "application/json" };
-    const authToken = token || localStorage.getItem("assetflow_token");
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
+    const authToken = token || getStoredToken();
+    if (authToken && !PUBLIC_PATHS.includes(normalizedPath)) {
+        headers.Authorization = `Bearer ${authToken}`;
+    }
 
     const res = await fetch(`${BASE_URL}${path}`, {
         method,
@@ -18,7 +31,11 @@ async function request(path, { method = "GET", body, token } = {}) {
 
     if (!res.ok) {
         const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.message || `Request failed: ${res.status}`);
+        const message = errBody.message || `Request failed: ${res.status}`;
+        if (res.status === 401 || res.status === 403) {
+            clearStoredSession();
+        }
+        throw new Error(message);
     }
     return res.json();
 }
@@ -29,6 +46,7 @@ export const api = {
         request("/auth/login", { method: "POST", body: { email, password } }),
     signup: (name, email, password) =>
         request("/auth/signup", { method: "POST", body: { name, email, password } }),
+    getCurrentUser: () => request("/auth/me"),
 
     // --- Assets ---
     getAssets: (params = {}) =>

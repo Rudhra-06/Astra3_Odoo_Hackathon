@@ -5,6 +5,8 @@ import KpiCard from "../components/KpiCard";
 import AnalyticsCharts from "../components/AnalyticsCharts";
 import { formatDate, isOverdue } from "../utils/dateUtils";
 import api from "../utils/api";
+import { useAuth } from "../context/AuthContext";
+import { hasAnyRole } from "../utils/auth";
 
 // Mock data so the screen renders immediately during the hackathon, before
 // GET /api/dashboard/stats exists. Replace `stats` with the API response
@@ -27,7 +29,9 @@ const MOCK_RETURNS = [
 
 export default function Dashboard() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [stats, setStats] = useState(MOCK_STATS);
+    const canManageAssets = hasAnyRole(user, ["ADMIN", "ASSET_MANAGER"]);
 
     useEffect(() => {
         api
@@ -62,7 +66,7 @@ export default function Dashboard() {
             </div>
 
             <div className="flex flex-wrap gap-3 mb-6">
-                <QuickAction label="Register Asset" onClick={() => navigate("/assets/new")} />
+                {canManageAssets && <QuickAction label="Register Asset" onClick={() => navigate("/assets/new")} />}
                 <QuickAction label="Book Resource" onClick={() => navigate("/booking")} />
                 <QuickAction label="Raise Maintenance Request" onClick={() => navigate("/maintenance/new")} />
             </div>

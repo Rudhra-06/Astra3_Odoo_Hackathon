@@ -16,7 +16,7 @@ const managers = [ROLES.ADMIN, ROLES.ASSET_MANAGER];
  *     summary: Register a new asset
  *     security: [{ bearerAuth: [] }]
  */
-router.post('/', auth, authorize(...managers), v.register, validate, ctrl.registerAsset);
+router.post('/', auth, v.register, validate, ctrl.registerAsset);
 router.get('/', auth, v.search, validate, ctrl.searchAssets);
 router.get('/warranty-alerts', auth, authorize(...managers), ctrl.getWarrantyAlerts);
 router.get('/qr/lookup/:qrCode', auth, ctrl.lookupByQR);

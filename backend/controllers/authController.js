@@ -19,4 +19,13 @@ async function login(req, res, next) {
   }
 }
 
-module.exports = { signup, login };
+async function me(req, res, next) {
+  try {
+    const result = await AuthService.me(req);
+    success(res, result, 'Authenticated user profile loaded');
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { signup, login, me };

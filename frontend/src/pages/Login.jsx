@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
@@ -9,6 +9,14 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const { login, signup } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const redirectTo = searchParams.get("redirect") || "/dashboard";
+    const infoMessage = searchParams.get("reason") === "session-expired"
+        ? "Your session has expired. Please sign in again."
+        : searchParams.get("reason") === "logout"
+            ? "You have been logged out."
+            : null;
 
     function update(field, value) {
         setForm((f) => ({ ...f, [field]: value }));
@@ -26,7 +34,7 @@ export default function Login() {
                 // accounts to Employee. Promotion happens later via Admin > Org Setup.
                 await signup(form.name, form.email, form.password);
             }
-            navigate("/dashboard");
+            navigate(redirectTo, { replace: true });
         } catch (err) {
             setError(err.message || "Something went wrong. Please try again.");
         } finally {
@@ -105,6 +113,7 @@ export default function Login() {
                                 </p>
                             )}
 
+                            {infoMessage && <p className="text-sm text-teal-600">{infoMessage}</p>}
                             {error && <p className="text-sm text-status-lost">{error}</p>}
 
                             <button

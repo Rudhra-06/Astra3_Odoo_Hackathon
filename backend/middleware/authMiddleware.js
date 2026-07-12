@@ -12,8 +12,16 @@ module.exports = function authMiddleware(req, res, next) {
 
   try {
     req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    next(new AuthenticationError('Invalid or expired token'));
+    return next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return next(new AuthenticationError('Session expired. Please log in again.'));
+    }
+
+    if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
+      return next(new AuthenticationError('Invalid token. Please log in again.'));
+    }
+
+    return next(new AuthenticationError('Authentication failed. Please log in again.'));
   }
 };

@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../utils/api";
+import { hasAnyRole, roleLabel } from "../utils/auth";
 
 export default function Navbar({ title, notificationCount = 0 }) {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [unread, setUnread] = useState(notificationCount);
+    const canRegisterAsset = hasAnyRole(user, ["ADMIN", "ASSET_MANAGER"]);
 
     useEffect(() => {
         let mounted = true;
@@ -23,12 +25,14 @@ export default function Navbar({ title, notificationCount = 0 }) {
             </div>
 
             <div className="flex items-center gap-3">
-                <button
-                    onClick={() => navigate("/assets/new")}
-                    className="hidden sm:inline-flex text-sm px-3 py-1.5 rounded-md bg-ink-900 text-white hover:bg-ink-800"
-                >
-                    + Register Asset
-                </button>
+                {canRegisterAsset && (
+                    <button
+                        onClick={() => navigate("/assets/new")}
+                        className="hidden sm:inline-flex text-sm px-3 py-1.5 rounded-md bg-ink-900 text-white hover:bg-ink-800"
+                    >
+                        + Register Asset
+                    </button>
+                )}
                 <button
                     onClick={() => navigate("/booking")}
                     className="hidden sm:inline-flex text-sm px-3 py-1.5 rounded-md border border-gray-300 text-ink-700 hover:bg-gray-50"
@@ -55,9 +59,9 @@ export default function Navbar({ title, notificationCount = 0 }) {
                     </div>
                     <div className="text-sm">
                         <p className="font-medium text-ink-900 leading-none">{user?.name || "Guest"}</p>
-                        <p className="text-xs text-gray-500">{user?.role || ""}</p>
+                        <p className="text-xs text-gray-500">{roleLabel(user?.role)}</p>
                     </div>
-                    <button onClick={logout} className="text-xs text-gray-400 hover:text-status-lost ml-2">
+                    <button onClick={() => logout(true)} className="text-xs text-gray-400 hover:text-status-lost ml-2">
                         Log out
                     </button>
                 </div>

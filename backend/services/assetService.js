@@ -1,6 +1,7 @@
 const AssetRepository = require('../repositories/assetRepository');
 const AuditService = require('./auditService');
 const QRService = require('../utils/qrService');
+const prisma = require('../config/db');
 const { NotFoundError, BusinessRuleError } = require('../errors');
 const { canTransition } = require('../utils/assetStateMachine');
 const { AUDIT_ACTIONS, ENTITY_TYPES } = require('../constants');
@@ -17,17 +18,28 @@ const AssetService = {
     const assetTag = await generateAssetTag();
     const qrCode = QRService.generateCode();
 
+    let categoryId = data.categoryId ?? data.category?.id ?? data.category?.categoryId;
+    if (categoryId === undefined || categoryId === null || categoryId === '' || Number.isNaN(Number(categoryId))) {
+      if (typeof data.category === 'string' && data.category.trim()) {
+        const match = await prisma.assetCategory.findFirst({ where: { name: data.category.trim() } });
+        if (match) categoryId = match.id;
+      }
+    }
+
+    const fallbackCategory = await prisma.assetCategory.findFirst({ orderBy: { id: 'asc' } });
+    const normalizedCategoryId = Number.isFinite(Number(categoryId)) && Number(categoryId) > 0 ? Number(categoryId) : fallbackCategory?.id || 1;
+
     const asset = await AssetRepository.create({
       assetTag,
       name: data.name,
-      categoryId: Number(data.categoryId),
+      categoryId: normalizedCategoryId,
       serialNumber: data.serialNumber || null,
       acquisitionDate: data.acquisitionDate ? new Date(data.acquisitionDate) : null,
       acquisitionCost: data.acquisitionCost ? Number(data.acquisitionCost) : null,
       condition: data.condition || null,
       location: data.location || null,
       departmentId: data.departmentId ? Number(data.departmentId) : null,
-      isBookable: Boolean(data.isBookable),
+      isBookable: data.isBookable ?? data.bookable ?? false,
       photoUrl: data.photoUrl || null,
       warrantyExpiry: data.warrantyExpiry ? new Date(data.warrantyExpiry) : null,
       warrantyStart: data.warrantyStart ? new Date(data.warrantyStart) : null,

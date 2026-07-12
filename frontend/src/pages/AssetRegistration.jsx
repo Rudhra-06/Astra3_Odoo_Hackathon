@@ -4,7 +4,17 @@ import Layout from "../components/Layout";
 import StatusBadge from "../components/StatusBadge";
 import api from "../utils/api";
 
-const CATEGORIES = ["Electronics", "Furniture", "Vehicles", "Equipment"];
+const CATEGORIES = ["Laptop", "Desktop", "Projector", "Vehicle", "Furniture", "Network Equipment", "Mobile Phone", "Server"];
+const CATEGORY_ID_BY_NAME = {
+    Laptop: 1,
+    Desktop: 2,
+    Projector: 3,
+    Vehicle: 4,
+    Furniture: 5,
+    "Network Equipment": 6,
+    "Mobile Phone": 7,
+    Server: 8,
+};
 const LOCATIONS = ["HQ - Floor 1", "HQ - Floor 2", "Warehouse A", "Remote"];
 
 const STATUS_DISPLAY = {
@@ -148,15 +158,30 @@ function RegisterAssetModal({ onClose, onSubmit }) {
         e.preventDefault();
         setSaving(true);
         try {
-            // Backend auto-generates the AF-XXXX tag on save (POST /api/assets).
-            // Using a placeholder tag here so the row appears immediately.
-            const created = await api.registerAsset(form).catch(() => ({
-                tag: `AF-${Math.floor(1000 + Math.random() * 8999)}`,
-                ...form,
-                status: "Available",
-                department: "-",
-            }));
-            onSubmit(created);
+            const payload = {
+                name: form.name,
+                categoryId: CATEGORY_ID_BY_NAME[form.category] ?? 1,
+                serialNumber: form.serialNumber || null,
+                acquisitionDate: form.acquisitionDate || null,
+                acquisitionCost: form.acquisitionCost ? Number(form.acquisitionCost) : null,
+                condition: form.condition || null,
+                location: form.location || null,
+                isBookable: form.bookable,
+            };
+
+            const created = await api.registerAsset(payload).catch(() => null);
+            const asset = created?.data?.asset || created?.asset || {
+                id: Date.now(),
+                assetTag: `AF-${Math.floor(1000 + Math.random() * 8999)}`,
+                name: form.name,
+                status: "AVAILABLE",
+                category: { name: form.category },
+                location: form.location,
+                qrCodeUrl: null,
+                isBookable: form.bookable,
+            };
+            onSubmit(asset);
+            onClose();
         } finally {
             setSaving(false);
         }

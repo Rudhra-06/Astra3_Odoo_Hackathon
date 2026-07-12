@@ -6,6 +6,22 @@ const { AuthenticationError, ConflictError } = require('../errors');
 const { BCRYPT_ROUNDS, JWT_EXPIRY, AUDIT_ACTIONS, ENTITY_TYPES } = require('../constants');
 
 const AuthService = {
+  me: async (req) => {
+    const user = await UserRepository.findById(req.user.id);
+
+    if (!user) {
+      throw new AuthenticationError('User account no longer exists');
+    }
+
+    if (user.status !== 'ACTIVE') {
+      throw new AuthenticationError('Account is inactive. Contact your administrator.');
+    }
+
+    return {
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status, departmentId: user.departmentId },
+    };
+  },
+
   signup: async ({ name, email, password, departmentId }, req) => {
     const existing = await UserRepository.findByEmail(email);
     if (existing) throw new ConflictError('Email is already registered');

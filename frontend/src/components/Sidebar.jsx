@@ -1,24 +1,24 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { hasAnyRole, roleLabel } from "../utils/auth";
 
 const NAV_ITEMS = [
-    { to: "/scanner", label: "QR Scanner", icon: "QR", roles: ["Admin", "AssetManager", "DepartmentHead", "Employee"] },
-    { to: "/assistant", label: "AI Assistant", icon: "AI", roles: ["Admin", "AssetManager", "DepartmentHead", "Employee"] },
-    { to: "/dashboard", label: "Dashboard", icon: "◧", roles: ["Admin", "AssetManager", "DepartmentHead", "Employee"] },
-    { to: "/org-setup", label: "Organization Setup", icon: "▤", roles: ["Admin"] },
-    { to: "/assets", label: "Assets", icon: "▣", roles: ["Admin", "AssetManager", "DepartmentHead", "Employee"] },
-    { to: "/allocation", label: "Allocation & Transfer", icon: "⇄", roles: ["Admin", "AssetManager", "DepartmentHead"] },
-    { to: "/booking", label: "Resource Booking", icon: "▦", roles: ["Admin", "AssetManager", "DepartmentHead", "Employee"] },
-    { to: "/maintenance", label: "Maintenance", icon: "✚", roles: ["Admin", "AssetManager", "DepartmentHead", "Employee"] },
-    { to: "/audit", label: "Asset Audit", icon: "✓", roles: ["Admin", "AssetManager"] },
-    { to: "/reports", label: "Reports & Analytics", icon: "▥", roles: ["Admin", "AssetManager", "DepartmentHead"] },
-    { to: "/activity", label: "Activity & Notifications", icon: "◔", roles: ["Admin", "AssetManager", "DepartmentHead", "Employee"] },
+    { to: "/scanner", label: "QR Scanner", icon: "QR", roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD", "EMPLOYEE"] },
+    { to: "/assistant", label: "AI Assistant", icon: "AI", roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD", "EMPLOYEE"] },
+    { to: "/dashboard", label: "Dashboard", icon: "◧", roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD", "EMPLOYEE"] },
+    { to: "/org-setup", label: "Organization Setup", icon: "▤", roles: ["ADMIN"] },
+    { to: "/assets", label: "Assets", icon: "▣", roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD", "EMPLOYEE"] },
+    { to: "/allocation", label: "Allocation & Transfer", icon: "⇄", roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD"] },
+    { to: "/booking", label: "Resource Booking", icon: "▦", roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD", "EMPLOYEE"] },
+    { to: "/maintenance", label: "Maintenance", icon: "✚", roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD", "EMPLOYEE"] },
+    { to: "/audit", label: "Asset Audit", icon: "✓", roles: ["ADMIN", "ASSET_MANAGER"] },
+    { to: "/reports", label: "Reports & Analytics", icon: "▥", roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD"] },
+    { to: "/activity", label: "Activity & Notifications", icon: "◔", roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD", "EMPLOYEE"] },
 ];
 
 export default function Sidebar() {
     const { user } = useAuth();
-    const role = user?.role || "Employee";
-    const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
+    const items = NAV_ITEMS.filter((item) => hasAnyRole(user, item.roles));
 
     return (
         <aside className="w-64 shrink-0 bg-ink-900 text-gray-300 flex flex-col h-screen sticky top-0">
@@ -49,7 +49,7 @@ export default function Sidebar() {
             </nav>
 
             <div className="px-5 py-4 border-t border-ink-700 text-xs text-gray-500">
-                Signed in as <span className="text-gray-300">{role}</span>
+                Signed in as <span className="text-gray-300">{roleLabel(user?.role)}</span>
             </div>
         </aside>
     );
