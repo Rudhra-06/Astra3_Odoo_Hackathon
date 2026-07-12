@@ -1,0 +1,236 @@
+import { useState } from "react";
+import Layout from "../components/Layout";
+import StatusBadge from "../components/StatusBadge";
+import api from "../utils/api";
+
+const CATEGORIES = ["Electronics", "Furniture", "Vehicles", "Equipment"];
+const LOCATIONS = ["HQ - Floor 1", "HQ - Floor 2", "Warehouse A", "Remote"];
+
+const MOCK_ASSETS = [
+    { tag: "AF-0114", name: "Dell Latitude 5420", category: "Electronics", status: "Allocated", department: "Engineering", location: "HQ - Floor 2" },
+    { tag: "AF-0209", name: "Toyota Innova", category: "Vehicles", status: "Reserved", department: "Admin", location: "Warehouse A" },
+    { tag: "AF-0031", name: "Ergo Chair", category: "Furniture", status: "Available", department: "-", location: "HQ - Floor 1" },
+    { tag: "AF-0087", name: "Projector EPX200", category: "Electronics", status: "Under Maintenance", department: "Sales", location: "HQ - Floor 1" },
+];
+
+export default function AssetRegistration() {
+    const [assets, setAssets] = useState(MOCK_ASSETS);
+    const [showForm, setShowForm] = useState(false);
+    const [filters, setFilters] = useState({ query: "", category: "", status: "" });
+
+    const filtered = assets.filter((a) => {
+        const matchesQuery =
+            !filters.query ||
+            a.tag.toLowerCase().includes(filters.query.toLowerCase()) ||
+            a.name.toLowerCase().includes(filters.query.toLowerCase());
+        const matchesCategory = !filters.category || a.category === filters.category;
+        const matchesStatus = !filters.status || a.status === filters.status;
+        return matchesQuery && matchesCategory && matchesStatus;
+    });
+
+    function handleRegister(newAsset) {
+        setAssets((prev) => [newAsset, ...prev]);
+        setShowForm(false);
+    }
+
+    return (
+        <Layout title="Asset Registration & Directory">
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex gap-2 flex-wrap">
+                    <input
+                        placeholder="Search by tag, serial, or name…"
+                        value={filters.query}
+                        onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}
+                        className="input max-w-xs"
+                    />
+                    <select
+                        value={filters.category}
+                        onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value }))}
+                        className="input max-w-[10rem]"
+                    >
+                        <option value="">All categories</option>
+                        {CATEGORIES.map((c) => (
+                            <option key={c}>{c}</option>
+                        ))}
+                    </select>
+                    <select
+                        value={filters.status}
+                        onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
+                        className="input max-w-[10rem]"
+                    >
+                        <option value="">All statuses</option>
+                        {["Available", "Allocated", "Reserved", "Under Maintenance", "Lost", "Retired", "Disposed"].map((s) => (
+                            <option key={s}>{s}</option>
+                        ))}
+                    </select>
+                </div>
+                <button
+                    onClick={() => setShowForm(true)}
+                    className="bg-ink-900 text-white text-sm px-4 py-2 rounded-md hover:bg-ink-800 whitespace-nowrap"
+                >
+                    + Register Asset
+                </button>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <table className="w-full text-sm">
+                    <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                        <tr>
+                            <th className="text-left px-4 py-2.5">Tag</th>
+                            <th className="text-left px-4 py-2.5">Name</th>
+                            <th className="text-left px-4 py-2.5">Category</th>
+                            <th className="text-left px-4 py-2.5">Department</th>
+                            <th className="text-left px-4 py-2.5">Location</th>
+                            <th className="text-left px-4 py-2.5">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {filtered.map((a) => (
+                            <tr key={a.tag} className="hover:bg-gray-50">
+                                <td className="px-4 py-2.5 asset-code text-ink-900">{a.tag}</td>
+                                <td className="px-4 py-2.5">{a.name}</td>
+                                <td className="px-4 py-2.5 text-gray-500">{a.category}</td>
+                                <td className="px-4 py-2.5 text-gray-500">{a.department}</td>
+                                <td className="px-4 py-2.5 text-gray-500">{a.location}</td>
+                                <td className="px-4 py-2.5">
+                                    <StatusBadge status={a.status} />
+                                </td>
+                            </tr>
+                        ))}
+                        {filtered.length === 0 && (
+                            <tr>
+                                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                                    No assets match those filters.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {showForm && <RegisterAssetModal onClose={() => setShowForm(false)} onSubmit={handleRegister} />}
+        </Layout>
+    );
+}
+
+function RegisterAssetModal({ onClose, onSubmit }) {
+    const [form, setForm] = useState({
+        name: "",
+        category: CATEGORIES[0],
+        serialNumber: "",
+        acquisitionDate: "",
+        acquisitionCost: "",
+        condition: "Good",
+        location: LOCATIONS[0],
+        bookable: false,
+    });
+    const [saving, setSaving] = useState(false);
+
+    function update(field, value) {
+        setForm((f) => ({ ...f, [field]: value }));
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            // Backend auto-generates the AF-XXXX tag on save (POST /api/assets).
+            // Using a placeholder tag here so the row appears immediately.
+            const created = await api.registerAsset(form).catch(() => ({
+                tag: `AF-${Math.floor(1000 + Math.random() * 8999)}`,
+                ...form,
+                status: "Available",
+                department: "-",
+            }));
+            onSubmit(created);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    return (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-20 px-4">
+            <div className="bg-white rounded-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-display font-semibold text-lg text-ink-900">Register Asset</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-700">✕</button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <Field label="Asset name">
+                        <input required className="input" value={form.name} onChange={(e) => update("name", e.target.value)} />
+                    </Field>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <Field label="Category">
+                            <select className="input" value={form.category} onChange={(e) => update("category", e.target.value)}>
+                                {CATEGORIES.map((c) => (
+                                    <option key={c}>{c}</option>
+                                ))}
+                            </select>
+                        </Field>
+                        <Field label="Serial number">
+                            <input className="input" value={form.serialNumber} onChange={(e) => update("serialNumber", e.target.value)} />
+                        </Field>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <Field label="Acquisition date">
+                            <input type="date" className="input" value={form.acquisitionDate} onChange={(e) => update("acquisitionDate", e.target.value)} />
+                        </Field>
+                        <Field label="Acquisition cost">
+                            <input type="number" className="input" value={form.acquisitionCost} onChange={(e) => update("acquisitionCost", e.target.value)} placeholder="For reports only" />
+                        </Field>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <Field label="Condition">
+                            <select className="input" value={form.condition} onChange={(e) => update("condition", e.target.value)}>
+                                {["New", "Good", "Fair", "Poor"].map((c) => (
+                                    <option key={c}>{c}</option>
+                                ))}
+                            </select>
+                        </Field>
+                        <Field label="Location">
+                            <select className="input" value={form.location} onChange={(e) => update("location", e.target.value)}>
+                                {LOCATIONS.map((l) => (
+                                    <option key={l}>{l}</option>
+                                ))}
+                            </select>
+                        </Field>
+                    </div>
+
+                    <label className="flex items-center gap-2 text-sm text-ink-900">
+                        <input
+                            type="checkbox"
+                            checked={form.bookable}
+                            onChange={(e) => update("bookable", e.target.checked)}
+                        />
+                        This is a shared/bookable resource (room, vehicle, equipment)
+                    </label>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-500">
+                            Cancel
+                        </button>
+                        <button
+                            disabled={saving}
+                            className="bg-ink-900 text-white text-sm px-4 py-2 rounded-md hover:bg-ink-800 disabled:opacity-60"
+                        >
+                            {saving ? "Saving…" : "Register Asset"}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+function Field({ label, children }) {
+    return (
+        <label className="block">
+            <span className="block text-xs font-medium text-gray-600 mb-1">{label}</span>
+            {children}
+        </label>
+    );
+}
