@@ -4,7 +4,7 @@ const cors = require('cors');
 
 const assetRoutes = require('./routes/assetRoutes');
 const allocationRoutes = require('./routes/allocationRoutes');
-// Namii will add: const authRoutes = require('./routes/authRoutes');
+const authRoutes = require("./routes/authRoutes");
 // Namii will add: const bookingRoutes = require('./routes/bookingRoutes');
 // Namii will add: const auditRoutes = require('./routes/auditRoutes');
 
@@ -15,7 +15,8 @@ app.use(express.json());
 
 app.use('/api/assets', assetRoutes);
 app.use('/api/allocations', allocationRoutes);
-// app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
+
 // app.use('/api/bookings', bookingRoutes);
 // app.use('/api/audits', auditRoutes);
 
